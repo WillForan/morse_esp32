@@ -20,7 +20,8 @@
 
 #=== Default values not available in the Arduino configuration files
 
-CHIP ?= esp8266
+CHIP=esp32
+ESP_ROOT=$(HOME)/src/lib/esp32
 
 # Set chip specific default board unless specified
 BOARD ?= $(if $(filter $(CHIP), esp32),esp32,generic)

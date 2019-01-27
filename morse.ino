@@ -5,28 +5,30 @@ int funcButton = 27; //D27
 
 // push type has a count and button down time
 struct push_t { 
-  push_t(): cnt(0), down(0) {};
+  push_t(): cnt(0), down(0), last(0) {};
   int cnt;
-  unsigned long down; 
+  unsigned long down, last; 
 } ditKey, dahKey, funcKey;  
 
 // update push, return true if use as keypress
 // make shift debouncing
 bool push_it(push_t &b){
   unsigned long t = millis();
-  if(t - b.down > 3*20){
+  if(t - b.last > 3*20){
     b.cnt = 0;
-    b.down = t;
     //Serial.printf("time between pushes too long. reset count: %d\n", t-b.down);
   }
   if(b.cnt > 6) { 
     //Serial.println("held for long enough to restar count");
     b.cnt=0;
-    b.down = t;
   }
 
   // increase count
+  // update last time of press
+  // set down time if this is the first interval button is down
   b.cnt++;
+  b.last = t;
+  if(b.cnt == 1) { b.down = t; }
   //Serial.printf("cnt: %d\n",b.cnt);
   
   // had for 3 intervals, count as push
@@ -42,28 +44,65 @@ bool push_it(push_t &b){
   return(false);
 }
 
-// setup keyboard settings
-String keySeq    = "";
-String lastSent = "";
 
+// track keyboard state
+struct state_t {
+  String keySeq, prevSent;
+  unsigned int n_dd;
+  long unsigned lastPush;
+} state;
+void reset_state(state_t &s){
+    s.prevSent = s.keySeq;
+    s.keySeq   = "";
+    s.lookup   = 2^7;
+    s.lastPush = 0;
+    s.n_dd     = 0;
+}
+void send_state(state_t &s){
+    if(!s.keySeq.equals("") ) {
+       Serial.printf("send ind %d (len %d) == %s\n", 
+             s.lookup, s.n_dd, s.keySeq.c_str()); 
+    }
+}
+/*
+ change state to account for new dit or dah
+*/
+void update_state(state_t &s, bool dah, unsigned long t){
+      char add;
+      if(dah) {
+         add = '_';
+         s.lookup |= s.lookup << s.n_dd;// _ is 1
+      } else {
+         add = '.';
+      }
+      
+      s.lastPush = t;
+      s.n_dd++;
+      s.keySeq += add;
+      Serial.printf("\t(%d) add %c @ %d\n", s.n_dd, add, t % 10000);
+}
+
+// setup keyboard settings
 void setup() {
-    pinMode(ledPin, OUTPUT);
     Serial.begin(115200);
     //Serial.begin(9600); // matches seriel out?
+
+    pinMode(ledPin, OUTPUT);
     pinMode(ditButton, INPUT);
     pinMode(dahButton, INPUT);
     pinMode(funcButton, INPUT);
+    reset_state(state);
 }
 
-long unsigned lastPush = 0;
 void loop() {
 
     long unsigned t = millis(); 
-    if( lastPush > 0 &&
-        t - lastPush > 100 && 
-        ! keySeq.equals("")) {
-      Serial.printf("send %s\n", keySeq.c_str()); 
-      keySeq = "";
+    if( state.lastPush > 0 &&
+        t - state.lastPush > 250 && 
+        ! state.keySeq.equals("")
+      ) {
+      send_state(state);
+      reset_state(state);
     }
     
     // any keys currently down?
@@ -72,19 +111,16 @@ void loop() {
     dah  = digitalRead(dahButton)  == HIGH && push_it(dahKey);
     func = digitalRead(funcButton) == HIGH && push_it(funcKey);
 
-    bool ditAndDah = (dit || dah) && abs(ditKey.down - dahKey.down) < 3*30;
+    bool ditAndDah = (dit || dah) &&
+                      abs(ditKey.down - dahKey.down) < 3*30;
     
     // append pushes onto morse queue
     if( dit && dah) {
       Serial.println("both");
     } else if(dit){
-      keySeq += ".";
-      lastPush = t;
-      Serial.printf("add . @ %f\n", t);
+      update_state(state, false, t);
     } else if(dah) {
-      keySeq += "_";
-      lastPush=t;
-      Serial.printf("add _ @ %f\n", t);
+      update_state(state, true, t);
     }
     // else: no button push in last 20ish ms
 
