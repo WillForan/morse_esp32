@@ -131,3 +131,106 @@ int ASCII_TO_KEYCODE[] = {
         0xb5,    // ~ x35|SHIFT_FLAG (shift `)
         0x4c    // DEL DELETE (called Forward Delete in usb.org document)
 };
+
+char morse_to_char(String keySeq){
+   // not actually morse code
+   if(keySeq.equals("._._"))    {return('\n');}
+
+   else if(keySeq.equals("._"))      {return('a');}
+   else if(keySeq.equals("_..."))    {return('b');}
+   else if(keySeq.equals("_._."))    {return('c');}
+   else if(keySeq.equals("_.."))     {return('d');}
+   else if(keySeq.equals("."))       {return('e');}
+   else if(keySeq.equals(".._."))    {return('f');}
+   else if(keySeq.equals("__."))     {return('g');}
+   else if(keySeq.equals("...."))    {return('h');}
+   else if(keySeq.equals(".."))      {return('i');}
+   else if(keySeq.equals(".___"))    {return('j');}
+   else if(keySeq.equals("_._"))     {return('k');}
+   else if(keySeq.equals("._.."))    {return('l');}
+   else if(keySeq.equals("__"))      {return('m');}
+   else if(keySeq.equals("_."))      {return('n');}
+   else if(keySeq.equals("___"))     {return('o');}
+   else if(keySeq.equals(".__."))    {return('p');}
+   else if(keySeq.equals("__._"))    {return('q');}
+   else if(keySeq.equals("._."))     {return('r');}
+   else if(keySeq.equals("..."))     {return('s');}
+   else if(keySeq.equals("_"))       {return('t');}
+   else if(keySeq.equals(".._"))     {return('u');}
+   else if(keySeq.equals("..._"))    {return('v');}
+   else if(keySeq.equals(".__"))     {return('w');}
+   else if(keySeq.equals("_.._"))    {return('x');}
+   else if(keySeq.equals("_.__"))    {return('y');}
+   else if(keySeq.equals("__.."))    {return('z');}
+   else if(keySeq.equals(".____"))   {return('1');}
+   else if(keySeq.equals("..___"))   {return('2');}
+   else if(keySeq.equals("...__"))   {return('3');}
+   else if(keySeq.equals("...._"))   {return('4');}
+   else if(keySeq.equals("....."))   {return('5');}
+   else if(keySeq.equals("_...."))   {return('6');}
+   else if(keySeq.equals("__..."))   {return('7');}
+   else if(keySeq.equals("___.."))   {return('8');}
+   else if(keySeq.equals("____."))   {return('9');}
+   else if(keySeq.equals("_____"))   {return('0');}
+   else if(keySeq.equals("._._._"))  {return('.');}
+   else if(keySeq.equals("__..__"))  {return(',');}
+   else if(keySeq.equals("..__.."))  {return('?');}
+   else if(keySeq.equals(".____."))  {return('\'');}
+   else if(keySeq.equals("_._.__"))  {return('!');}
+   else if(keySeq.equals("_.._."))   {return('/');}
+   else if(keySeq.equals("_.__."))   {return('(');}
+   else if(keySeq.equals("_.__._"))  {return(')');}
+   else if(keySeq.equals("._..."))   {return('&');}
+   else if(keySeq.equals("___..."))  {return(':');}
+   else if(keySeq.equals("_._._."))  {return(';');}
+   else if(keySeq.equals("_..._"))   {return('=');}
+   else if(keySeq.equals("._._."))   {return('+');}
+   else if(keySeq.equals("_...._"))  {return('-');}
+   else if(keySeq.equals("..__._"))  {return('_');}
+   else if(keySeq.equals("._.._."))  {return('"');}
+   else if(keySeq.equals("..._.._")) {return('$');}
+   else if(keySeq.equals(".__._."))  {return('@');}
+   else {return(' ');}
+};
+
+// keys not easily accessible in morse code
+// parens and symbols
+// if over writing shift function, turn off before return 
+// otherwise shift will be applied
+int funcOn_to_keycode(String keySeq, bool & s){
+   if     (keySeq.equals("."))      {return(0xa6);} // (
+   else if(keySeq.equals("_"))      {return(0xa7);} // )
+   else if(keySeq.equals(".."))     {return(0xaf);} // {
+   else if(keySeq.equals("__"))     {return(0xb0);} // }
+   else if(keySeq.equals("..."))    {return(0x2f);} // [
+   else if(keySeq.equals("___"))    {return(0x30);} // ]
+   else if(keySeq.equals("...."))   {return(0xb6);} // <
+   else if(keySeq.equals("____"))   {return(0xb7);} // >
+
+   else if(keySeq.equals("._"))     {return(0xb1);} // |
+   else if(keySeq.equals("_."))     {return(0xb5);} // ~
+   else if(keySeq.equals(".._"))    {return(0x38);} // /
+   else if(keySeq.equals("_.."))    {return(0x35);} // `
+   else if(keySeq.equals("__."))    {return(0x31);} // \
+   else {return(0x0);}
+}
+char funcOn_to_key(String keySeq, bool & s){
+   if     (keySeq.equals("."))      {return('(');}
+   else if(keySeq.equals("_"))      {return(')');}
+   else if(keySeq.equals(".."))     {return('{');}
+   else if(keySeq.equals("__"))     {return('}');}
+   else if(keySeq.equals("..."))    {return('[');}
+   else if(keySeq.equals("___"))    {return(']');}
+   else if(keySeq.equals("...."))   {return('<');}
+   else if(keySeq.equals("____"))   {return('>');}
+                                                  
+   else if(keySeq.equals("._"))     {return('|');}
+   else if(keySeq.equals("_."))     {return('~');}
+   else if(keySeq.equals(".._"))    {return('/');}
+   else if(keySeq.equals("_.."))    {return('`');}
+   else if(keySeq.equals("__."))    {return('\\');}
+   else {return('\0');}
+}
+
+
+// vi:ft=arduino

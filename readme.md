@@ -11,3 +11,10 @@ cd -
 # make file is from makeEspArduino, but already tracked
 # curl 'https://raw.githubusercontent.com/plerup/makeEspArduino/master/makeEspArduino.mk' > Makefile
 ```
+
+
+## usage
+* normal morse code
+* func + double press = shift
+* func + func = repeat
+* func + morse => symbols and parens
