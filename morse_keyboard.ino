@@ -1,11 +1,8 @@
 // add bluetooth hid/keybaord
 // https://github.com/nkolban/esp32-snippets/issues/230
-#include <BLEDevice.h>
-#include <BLEUtils.h>
-#include <BLEServer.h>
-#include <BLE2902.h>
 #include <keycodes.h> // ASCII_TO_KEYCODE, SHIFT_FLAG, funcOn_to_keycode, morse_to_char
-#include <BTHID.h>    // setupBLECharacteristics, BTSend
+#include <BLEKeyboard.h> // ASCII_TO_KEYCODE, SHIFT_FLAG, funcOn_to_keycode, morse_to_char
+#include <Arduino.h>
 
 // pin values
 int ledPin = 2;
@@ -15,23 +12,6 @@ int funcButton = 27; //D27
 bool funcOn = false;
 bool shiftOn = false;
 
-//bluetooth initialize
-
-bool BTEconnected = false;
-BLEService *pService;
-BLEService *pService1;
-BLECharacteristic *reportChar1;
-BLECharacteristic *reportChar2;
-BLECharacteristic *reportChar3;
-class BLEConnectCB : public BLEServerCallbacks {
-  void onConnect(BLEServer* pServer){
-    BTEconnected=true;
-  }
-
-  void onDisconnect(BLEServer* pServer){
-    BTEconnected=false;
-  }
-};
 
 // push type has a count and button down time
 struct push_t { 
@@ -44,6 +24,7 @@ struct push_t {
 // make shift debouncing
 bool push_it(push_t &b){
   unsigned long t = millis();
+
   if(t - b.last > 3*20){
     b.cnt = 0;
     //Serial.printf("time between pushes too long. reset count: %d\n", t-b.down);
@@ -106,7 +87,7 @@ void send_state(state_t &s){
     // shift key
     if(shiftOn) {s.keycode|=SHIFT_FLAG;}
 
-    BTSend(s.keycode, BTEconnected, reportChar1);
+    BTSend(s.keycode); 
 
     Serial.printf("send %c (len %d) == %s == %d (shift %d)\n",
           s.key, s.n_dd, s.keySeq.c_str(), s.keycode, shiftOn);
@@ -145,24 +126,17 @@ void setup() {
 
 
     //BLE HID
-    BLEDevice::init("ESP32");
-    BLEServer *pServer = BLEDevice::createServer();
-    pServer->setCallbacks(new BLEConnectCB());
-    pService = pServer->createService((uint16_t)0x180a);
-    pService1 = pServer->createService((uint16_t)0x1812, 30);
-    setupBLECharacteristics(pService, pService1, reportChar1, reportChar2, reportChar3);
-
-    pService->start();
-    pService1->start();
-    BLEAdvertising *pAdvertising = pServer->getAdvertising();
-    pAdvertising->setAppearance(961);
-    pAdvertising->addServiceUUID((uint16_t)0x1812);
-    pAdvertising->start();
+    xTaskCreate(taskServer, "server", 20000, NULL, 5, NULL);
 }
 
 void loop() {
 
+    // reset LED at start of every iteration
+    digitalWrite(ledPin, LOW);
+
     long unsigned t = millis();
+    // if no button press in last 250ms
+    // send current morse code state and start over
     if( state.lastPush > 0 &&
         t - state.lastPush > 250 &&
         ! state.keySeq.equals("")
@@ -185,14 +159,15 @@ void loop() {
     if (func) {
        if(funcOn){
           // todo: if func already on, repeat last?
-          BTSend(state.prevSent, BTEconnected, reportChar1);
+          BTSend(state.prevSent);
           Serial.printf("send prevous keycode %d\n", state.prevSent);
        }
        Serial.printf("func on\n");
        funcOn = true;
     }
 
-    // append pushes onto morse queue
+    // append dit or dah pushes onto morse queue
+    // both at the same time is backspace or shift (if func on)
     if(dit && dah) {
       if(funcOn){
          Serial.println("both down with func set shift");
@@ -201,7 +176,7 @@ void loop() {
       } else {
          Serial.println("both down, send BS");
          int BS = 0x2a;
-         BTSend(BS, BTEconnected, reportChar1);
+         BTSend(BS);
       }
       reset_state(state);
     } else if(dit){
@@ -211,10 +186,9 @@ void loop() {
     }
     // else: no button push in last 20ish ms
 
-
-    // wait and reset led
+    // wait some time before polling next
+    // is this killing BTSend?
     delay(20);
-    digitalWrite(ledPin, LOW);
 
 }
 

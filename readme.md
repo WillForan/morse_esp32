@@ -18,3 +18,8 @@ cd -
 * func + double press = shift
 * func + func = repeat
 * func + morse => symbols and parens
+
+## resources
+* BLE keybode example code [sabas1080/ESP32_HID.ino](https://gist.github.com/sabas1080/93115fb66e09c9b40e5857a19f3e7787)
+* other bluetooth hid example https://github.com/MagicCube/esp32-keynotes-controller/
+* makefile https://raw.githubusercontent.com/plerup/makeEspArduino/
